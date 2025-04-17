@@ -13,7 +13,19 @@ def fetch_law_list_and_detail(query, unit):
     res = requests.get(url)
     res.encoding = "utf-8"
     if res.status_code != 200:
-        return []
+    st.error("법령 목록 조회 실패")
+    return []
+
+if not res.content:
+    st.error("API 응답이 비어 있습니다.")
+    return []
+
+import xml.etree.ElementTree as ET
+try:
+    root = ET.fromstring(res.content)
+except ET.ParseError as e:
+    st.error(f"XML 파싱 중 오류 발생: {e}")
+    return []
 
     import xml.etree.ElementTree as ET
     root = ET.fromstring(res.content)
