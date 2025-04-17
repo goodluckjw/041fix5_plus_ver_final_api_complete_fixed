@@ -5,9 +5,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import streamlit as st
 from utils import xml_parser
-parse_law_xml = xml_parser.parse_law_xml
-filter_by_logic = xml_parser.filter_by_logic
 from utils.api_handler import fetch_law_list_and_detail
+
+parse_law_xml = xml_parser.parse_law_xml  # ensure this exists
 
 st.set_page_config(layout="wide")
 st.title("📘 부칙 개정 도우미")
@@ -34,7 +34,7 @@ with col1:
                 with st.expander(f"{law['법령명한글']}"):
                     st.markdown(f"[원문 보기]({law['원문링크']})", unsafe_allow_html=True)
                     for 조 in law["조문"]:
-                        st.markdown(조)
+                        st.markdown(조, unsafe_allow_html=True)
 with col2:
     if st.button("초기화"):
         st.experimental_rerun()
