@@ -17,7 +17,7 @@ def fetch_law_list_and_detail(query, unit):
 
     import xml.etree.ElementTree as ET
     root = ET.fromstring(res.content)
-    terms = [t.strip() for t in re.split(r"[,&\-()]", query) if t.strip()]
+    terms = [t.strip() for t in re.split(r"[,&\-()]", query or "") if t.strip()]
     results = []
 
     for law in root.findall("law"):
