@@ -12,18 +12,18 @@ def highlight(text, terms):
             text = text.replace(term, f"<span style='color:red'>{term}</span>")
     return text
 
+def filter_by_logic(text, terms):
+    cleaned = clean(text)
+    include = [t for t in terms if not t.startswith('-') and t in cleaned]
+    exclude = [t[1:] for t in terms if t.startswith('-')]
+    if all(i in cleaned for i in include) and not any(e in cleaned for e in exclude):
+        return True
+    return False
+
 def parse_law_xml(xml_data, terms, unit):
     import xml.etree.ElementTree as ET
     tree = ET.fromstring(xml_data)
     articles = tree.findall(".//조문")
-
-    def match_logic(text):
-        cleaned = clean(text)
-        include = [t for t in terms if not t.startswith('-') and t in cleaned]
-        exclude = [t[1:] for t in terms if t.startswith('-')]
-        if all(i in cleaned for i in include) and not any(e in cleaned for e in exclude):
-            return True
-        return False
 
     results = []
     for article in articles:
@@ -35,7 +35,7 @@ def parse_law_xml(xml_data, terms, unit):
         조출력 = False
         항목들 = []
 
-        if unit == "조" and match_logic(title + content):
+        if unit == "조" and filter_by_logic(title + content, terms):
             조출력 = True
 
         for 항 in 항들:
@@ -46,13 +46,13 @@ def parse_law_xml(xml_data, terms, unit):
                 text_to_check += 호.findtext("호내용", "") or ""
                 for 목 in 호.findall("목"):
                     text_to_check += 목.findtext("목내용", "") or ""
-            if unit == "항" and match_logic(text_to_check):
+            if unit == "항" and filter_by_logic(text_to_check, terms):
                 조출력 = True
             항목들.append((항번호, text_to_check))
 
         if unit == "법률":
             for 항번호, text in 항목들:
-                if match_logic(text):
+                if filter_by_logic(text, terms):
                     조출력 = True
 
         if 조출력:
@@ -60,7 +60,7 @@ def parse_law_xml(xml_data, terms, unit):
             if 항목들:
                 html += "<br>"
                 for 항번호, text in 항목들:
-                    if match_logic(text):
+                    if filter_by_logic(text, terms):
                         html += f"  ⓞ{항번호} {highlight(text, terms)}<br>"
             else:
                 html += highlight(content, terms)
