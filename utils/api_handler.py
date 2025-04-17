@@ -1,3 +1,4 @@
+import re
 
 import requests
 from utils.xml_parser import parse_law_xml
