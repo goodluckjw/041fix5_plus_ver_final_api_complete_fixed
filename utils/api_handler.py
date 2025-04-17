@@ -1,5 +1,4 @@
 import re
-
 import requests
 from utils.xml_parser import parse_law_xml
 
@@ -8,27 +7,23 @@ BASE = "http://www.law.go.kr"
 
 def fetch_law_list_and_detail(query, unit):
     from urllib.parse import quote
-    encoded_query = quote(f'"{query}"')
-    url = f"{BASE}/DRF/lawSearch.do?OC={OC}&target=law&type=XML&display=10&search=2&knd=A0002&query={encoded_query}"
+    encoded_query = quote(f"{query}")
+    url = f"{BASE}/DRF/lawSearch.do?OC={OC}&target=law&type=XML&display=100&search=2&knd=A0002&query={encoded_query}"
     res = requests.get(url)
     res.encoding = "utf-8"
+
     if res.status_code != 200:
-    st.error("법령 목록 조회 실패")
-    return []
+        return []
 
-if not res.content:
-    st.error("API 응답이 비어 있습니다.")
-    return []
-
-import xml.etree.ElementTree as ET
-try:
-    root = ET.fromstring(res.content)
-except ET.ParseError as e:
-    st.error(f"XML 파싱 중 오류 발생: {e}")
-    return []
+    if not res.content:
+        return []
 
     import xml.etree.ElementTree as ET
-    root = ET.fromstring(res.content)
+    try:
+        root = ET.fromstring(res.content)
+    except ET.ParseError:
+        return []
+
     terms = [t.strip() for t in re.split(r"[,&\-()]", query or "") if t.strip()]
     results = []
 
@@ -46,14 +41,13 @@ except ET.ParseError as e:
                     "원문링크": full_link,
                     "조문": articles
                 })
+
     return results
 
 def fetch_law_xml_by_mst(mst):
-    url = f"{BASE}/DRF/lawService.do?OC={OC}&target=law&MST={mst}&type=XML"
-    try:
-        res = requests.get(url, timeout=10)
-        res.encoding = "utf-8"
-        if res.status_code == 200:
-            return res.content
-    except Exception:
+    detail_url = f"{BASE}/DRF/lawService.do?OC={OC}&target=law&type=XML&mst={mst}"
+    res = requests.get(detail_url)
+    res.encoding = "utf-8"
+    if res.status_code != 200:
         return None
+    return res.text
